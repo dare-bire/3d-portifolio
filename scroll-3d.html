@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Derartu Alemayehu — Portfolio</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --white: #f5f4f0;
+    --ink: #0e0d0c;
+    --accent: #c8f23a;
+    --muted: rgba(245,244,240,0.45);
+    --font-display: 'Space Grotesk', sans-serif;
+  }
+
+  html { scroll-behavior: auto; }
+
+  body {
+    background: var(--ink);
+    color: var(--white);
+    font-family: var(--font-display);
+    overflow-x: hidden;
+  }
+
+  /* ── canvas ── */
+  #canvas-wrap {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+  canvas { display: block; width: 100% !important; height: 100% !important; }
+
+  /* ── scroll container ── */
+  #scroll-container {
+    position: relative;
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  /* ── sections ── */
+  .section {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  .text-block {
+    max-width: 560px;
+    padding: 2rem;
+    pointer-events: none;
+  }
+
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+
+  h1 {
+    font-size: clamp(2.8rem, 7vw, 5.5rem);
+    font-weight: 700;
+    line-height: 1.0;
+    letter-spacing: -0.03em;
+    margin-bottom: 1.25rem;
+  }
+
+  h2 {
+    font-size: clamp(2rem, 5vw, 3.8rem);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    margin-bottom: 1rem;
+  }
+
+  p.body {
+    font-size: clamp(0.95rem, 2vw, 1.1rem);
+    line-height: 1.7;
+    color: var(--muted);
+    max-width: 42ch;
+  }
+
+  .accent-word { color: var(--accent); }
+
+  /* align alternating sections */
+  .section.right .text-block { margin-left: auto; text-align: right; }
+  .section.right p.body { margin-left: auto; }
+
+  /* ── progress bar ── */
+  #progress {
+    position: fixed;
+    top: 0; left: 0;
+    height: 2px;
+    background: var(--accent);
+    width: 0%;
+    z-index: 100;
+    transition: width 0.05s linear;
+  }
+
+  /* ── nav dot ── */
+  #nav {
+    position: fixed;
+    right: 1.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: rgba(245,244,240,0.25);
+    transition: background 0.3s, transform 0.3s;
+  }
+  .dot.active { background: var(--accent); transform: scale(1.6); }
+
+  /* ── section 5 CTA ── */
+  .cta-link {
+    display: inline-block;
+    margin-top: 1.5rem;
+    padding: 0.75rem 1.75rem;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+    pointer-events: all;
+    transition: background 0.2s, color 0.2s;
+  }
+  .cta-link:hover { background: var(--accent); color: var(--ink); }
+
+  /* ── skill pills ── */
+  .skill-groups { margin-top: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem; }
+  .skill-group-label {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.4rem;
+  }
+  .skill-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pill {
+    font-size: 12px;
+    padding: 5px 12px;
+    border: 1px solid rgba(200,242,58,0.3);
+    color: var(--white);
+    border-radius: 100px;
+    background: rgba(200,242,58,0.07);
+    letter-spacing: 0.04em;
+  }
+  .pill.accent { border-color: var(--accent); color: var(--accent); background: rgba(200,242,58,0.12); }
+
+  /* ── hero name ── */
+  .hero-name {
+    font-size: clamp(3.2rem, 8vw, 6rem);
+    font-weight: 700;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    margin-bottom: 1.25rem;
+  }
+  .hero-name .first { display: block; color: var(--white); }
+  .hero-name .last  { display: block; color: var(--accent); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div id="progress"></div>
+
+<nav id="nav">
+  <div class="dot active" data-idx="0"></div>
+  <div class="dot" data-idx="1"></div>
+  <div class="dot" data-idx="2"></div>
+  <div class="dot" data-idx="3"></div>
+  <div class="dot" data-idx="4"></div>
+</nav>
+
+<div id="canvas-wrap"><canvas id="c"></canvas></div>
+
+<div id="scroll-container">
+
+  <!-- Section 0 — Hero -->
+  <section class="section" data-idx="0">
+    <div class="text-block">
+      <p class="eyebrow">Full stack &amp; 3D developer</p>
+      <div class="hero-name">
+        <span class="first">Derartu</span>
+        <span class="last">Alemayehu.</span>
+      </div>
+      <p class="body">I build full stack web apps and immersive 3D experiences — scroll to explore my world.</p>
+    </div>
+  </section>
+
+  <!-- Section 1 — About -->
+  <section class="section right" data-idx="1">
+    <div class="text-block">
+      <p class="eyebrow">About me</p>
+      <h2>Code is my <span class="accent-word">craft.</span></h2>
+      <p class="body">I'm Derartu — a full stack developer and 3D web creator. I build everything from REST APIs and databases to interactive frontends that clients remember.</p>
+    </div>
+  </section>
+
+  <!-- Section 2 — Skills -->
+  <section class="section" data-idx="2">
+    <div class="text-block">
+      <p class="eyebrow">Skills</p>
+      <h2>The stack I <span class="accent-word">live in.</span></h2>
+      <div class="skill-groups">
+        <div>
+          <p class="skill-group-label">Frontend</p>
+          <div class="skill-pills">
+            <span class="pill accent">HTML</span>
+            <span class="pill accent">CSS</span>
+            <span class="pill">Tailwind CSS</span>
+            <span class="pill">JavaScript</span>
+            <span class="pill">React.js</span>
+            <span class="pill">Next.js</span>
+            <span class="pill accent">3D / Three.js</span>
+          </div>
+        </div>
+        <div>
+          <p class="skill-group-label">Backend &amp; Database</p>
+          <div class="skill-pills">
+            <span class="pill">Node.js</span>
+            <span class="pill">Express.js</span>
+            <span class="pill">MongoDB</span>
+            <span class="pill">MySQL</span>
+            <span class="pill">SQL</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3 — Projects -->
+  <section class="section right" data-idx="3">
+    <div class="text-block">
+      <p class="eyebrow">Projects</p>
+      <h2>Work that <span class="accent-word">ships.</span></h2>
+      <p class="body">From SaaS dashboards to 3D product showcases — every project is built to perform, not just impress.</p>
+    </div>
+  </section>
+
+  <!-- Section 4 — Contact -->
+  <section class="section" data-idx="4">
+    <div class="text-block">
+      <p class="eyebrow">Let's work together</p>
+      <h2>Ready to <span class="accent-word">start?</span></h2>
+      <p class="body">I'm Derartu and I'm available for freelance projects. If you need a full stack developer who ships clean, fast, and on time — let's talk.</p>
+      <a class="cta-link" href="mailto:you@email.com">Get in touch</a>
+    </div>
+  </section>
+
+</div>
+
+<!-- Three.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- GSAP + ScrollTrigger -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+<script>
+gsap.registerPlugin(ScrollTrigger);
+
+/* ── Three.js scene setup ── */
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.outputEncoding = THREE.sRGBEncoding;
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x0e0d0c, 0.035);
+
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 200);
+camera.position.set(0, 0, 12);
+
+/* ── Lights ── */
+const ambient = new THREE.AmbientLight(0xffffff, 0.3);
+scene.add(ambient);
+
+const accent = new THREE.PointLight(0xc8f23a, 4, 30);
+accent.position.set(5, 5, 5);
+scene.add(accent);
+
+const blue = new THREE.PointLight(0x3a8ff2, 3, 25);
+blue.position.set(-6, -4, 2);
+scene.add(blue);
+
+/* ── Shared materials ── */
+const wireMat = new THREE.MeshStandardMaterial({
+  color: 0xc8f23a,
+  wireframe: true,
+  transparent: true,
+  opacity: 0.55,
+});
+const solidMat = new THREE.MeshStandardMaterial({
+  color: 0xf5f4f0,
+  roughness: 0.4,
+  metalness: 0.6,
+});
+const glowMat = new THREE.MeshStandardMaterial({
+  color: 0xc8f23a,
+  roughness: 0.2,
+  metalness: 0.9,
+  emissive: 0xc8f23a,
+  emissiveIntensity: 0.25,
+});
+
+/* ── Objects ── */
+
+// Central torusknot — hero
+const knot = new THREE.Mesh(new THREE.TorusKnotGeometry(2.2, 0.55, 128, 20), wireMat);
+scene.add(knot);
+
+// Icosahedron cluster — section 1
+const icoGroup = new THREE.Group();
+icoGroup.position.set(0, -18, 0);
+for (let i = 0; i < 7; i++) {
+  const g = new THREE.IcosahedronGeometry(0.6 + Math.random() * 0.5, 0);
+  const m = Math.random() > 0.5 ? solidMat : glowMat;
+  const mesh = new THREE.Mesh(g, m);
+  const angle = (i / 7) * Math.PI * 2;
+  mesh.position.set(Math.cos(angle) * 3.5, Math.sin(angle) * 1.8, Math.sin(angle * 2) * 1.5);
+  mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+  icoGroup.add(mesh);
+}
+scene.add(icoGroup);
+
+// Ring stack — section 2
+const ringGroup = new THREE.Group();
+ringGroup.position.set(0, -36, 0);
+for (let i = 0; i < 5; i++) {
+  const r = new THREE.Mesh(
+    new THREE.TorusGeometry(1.5 + i * 0.55, 0.06, 16, 80),
+    i % 2 === 0 ? glowMat : solidMat
+  );
+  r.rotation.x = Math.PI / 2 + i * 0.25;
+  r.rotation.z = i * 0.5;
+  ringGroup.add(r);
+}
+scene.add(ringGroup);
+
+// Dodecahedron explode — section 3
+const dodGroup = new THREE.Group();
+dodGroup.position.set(0, -54, 0);
+const pieces = [];
+for (let i = 0; i < 12; i++) {
+  const m = new THREE.Mesh(new THREE.DodecahedronGeometry(0.55, 0), glowMat);
+  const phi = Math.acos(1 - 2 * (i + 0.5) / 12);
+  const theta = Math.PI * (1 + Math.sqrt(5)) * i;
+  m.position.set(
+    Math.sin(phi) * Math.cos(theta) * 2.8,
+    Math.cos(phi) * 2.8,
+    Math.sin(phi) * Math.sin(theta) * 2.8
+  );
+  pieces.push(m);
+  dodGroup.add(m);
+}
+scene.add(dodGroup);
+
+// Final sphere — section 4
+const finalSphere = new THREE.Mesh(new THREE.SphereGeometry(2.5, 64, 64), new THREE.MeshStandardMaterial({
+  color: 0xc8f23a,
+  roughness: 0.1,
+  metalness: 1,
+  wireframe: false,
+}));
+finalSphere.position.set(0, -72, 0);
+scene.add(finalSphere);
+
+/* ── Particle field ── */
+const particleCount = 800;
+const positions = new Float32Array(particleCount * 3);
+for (let i = 0; i < particleCount; i++) {
+  positions[i * 3]     = (Math.random() - 0.5) * 60;
+  positions[i * 3 + 1] = (Math.random() - 0.5) * 100;
+  positions[i * 3 + 2] = (Math.random() - 0.5) * 40;
+}
+const particleGeo = new THREE.BufferGeometry();
+particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+const particles = new THREE.Points(particleGeo, new THREE.PointsMaterial({
+  color: 0xc8f23a, size: 0.08, transparent: true, opacity: 0.5,
+}));
+scene.add(particles);
+
+/* ── Camera scroll path ── */
+// Camera travels down Y axis, with gentle Z and X curves per section
+const camPath = {
+  y:  [0,   -18,  -36,  -54,  -72],
+  z:  [12,   10,   14,   8,    6],
+  rx: [0,   0.15, -0.1,  0.2, 0],
+};
+
+const proxy = { progress: 0 };
+
+ScrollTrigger.create({
+  trigger: '#scroll-container',
+  start: 'top top',
+  end: 'bottom bottom',
+  scrub: 1.2,
+  onUpdate: (self) => {
+    proxy.progress = self.progress;
+  }
+});
+
+/* ── Nav dots ── */
+const dots = document.querySelectorAll('.dot');
+const sections = document.querySelectorAll('.section');
+
+sections.forEach((sec, i) => {
+  ScrollTrigger.create({
+    trigger: sec,
+    start: 'top center',
+    end: 'bottom center',
+    onEnter: () => updateDot(i),
+    onEnterBack: () => updateDot(i),
+  });
+});
+
+function updateDot(i) {
+  dots.forEach(d => d.classList.remove('active'));
+  dots[i].classList.add('active');
+}
+
+/* ── Progress bar ── */
+const progressBar = document.getElementById('progress');
+ScrollTrigger.create({
+  trigger: '#scroll-container',
+  start: 'top top',
+  end: 'bottom bottom',
+  onUpdate: (self) => {
+    progressBar.style.width = (self.progress * 100).toFixed(1) + '%';
+  }
+});
+
+/* ── Text fade in ── */
+document.querySelectorAll('.text-block').forEach((block) => {
+  gsap.fromTo(block,
+    { opacity: 0, y: 40 },
+    {
+      opacity: 1, y: 0, duration: 0.6,
+      scrollTrigger: {
+        trigger: block,
+        start: 'top 75%',
+        end: 'top 40%',
+        scrub: false,
+        toggleActions: 'play none none reverse',
+      }
+    }
+  );
+});
+
+/* ── Mouse parallax ── */
+const mouse = { x: 0, y: 0 };
+window.addEventListener('mousemove', (e) => {
+  mouse.x = (e.clientX / window.innerWidth  - 0.5) * 2;
+  mouse.y = (e.clientY / window.innerHeight - 0.5) * 2;
+});
+
+/* ── Lerp helper ── */
+function lerp(a, b, t) { return a + (b - a) * t; }
+function lerpArr(arr, t) {
+  const n = arr.length - 1;
+  const i = Math.min(Math.floor(t * n), n - 1);
+  const f = (t * n) - i;
+  return lerp(arr[i], arr[i + 1], f);
+}
+
+/* ── Render loop ── */
+const clock = new THREE.Clock();
+let currentCamY = 0, currentCamZ = 12, currentCamRX = 0;
+
+function animate() {
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+  const p = proxy.progress;
+
+  // Smooth camera
+  const targetY  = lerpArr(camPath.y,  p);
+  const targetZ  = lerpArr(camPath.z,  p);
+  const targetRX = lerpArr(camPath.rx, p);
+
+  currentCamY  = lerp(currentCamY,  targetY,  0.06);
+  currentCamZ  = lerp(currentCamZ,  targetZ,  0.06);
+  currentCamRX = lerp(currentCamRX, targetRX, 0.06);
+
+  camera.position.y  = currentCamY;
+  camera.position.z  = currentCamZ;
+  camera.position.x  = mouse.x * 1.5;
+  camera.rotation.x  = currentCamRX - mouse.y * 0.08;
+  camera.rotation.y  = mouse.x * -0.05;
+
+  // Object rotations
+  knot.rotation.x = t * 0.18;
+  knot.rotation.y = t * 0.25;
+
+  icoGroup.rotation.y = t * 0.12;
+  icoGroup.children.forEach((c, i) => { c.rotation.y = t * (0.3 + i * 0.05); });
+
+  ringGroup.rotation.y = t * 0.08;
+  ringGroup.rotation.x = Math.sin(t * 0.2) * 0.15;
+
+  dodGroup.rotation.y = t * 0.1;
+  pieces.forEach((pc, i) => {
+    pc.rotation.x = t * (0.3 + i * 0.03);
+    pc.rotation.z = t * (0.2 - i * 0.02);
+  });
+
+  finalSphere.rotation.y = t * 0.15;
+  finalSphere.rotation.x = t * 0.07;
+
+  particles.rotation.y = t * 0.01;
+
+  // Light animation
+  accent.position.x = Math.sin(t * 0.4) * 6 + mouse.x * 3;
+  accent.position.y = currentCamY + Math.cos(t * 0.3) * 3;
+  blue.position.x   = Math.cos(t * 0.35) * 6;
+  blue.position.y   = currentCamY - 3 + Math.sin(t * 0.28) * 3;
+
+  renderer.render(scene, camera);
+}
+
+animate();
+
+/* ── Resize ── */
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>
